@@ -11,14 +11,15 @@ import (
 )
 
 func startCont() {
+
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		panic(err)
 	}
 	defer cli.Close()
 
-	imageName := "busybox:latest"
+	imageName := "bfirsh/reticulate-splines"
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
@@ -83,7 +84,17 @@ func stopCont() {
 }
 
 func main() {
-	//startCont()
+
+	// выполнить в терминале команду docker context ls, выбрать DOCKER ENDPOINT, соответствующий Docker Desktop
+	// и подставить значение в dockerHost
+	dockerHost := "unix:///home/" + os.Getenv("USER") + "/.docker/desktop/docker.sock"
+
+	err := os.Setenv("DOCKER_HOST", dockerHost)
+	if err != nil {
+		panic(err)
+	}
+
+	startCont()
 
 	//getAllConts()
 
