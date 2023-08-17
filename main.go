@@ -8,6 +8,7 @@ import (
 	"github.com/docker/docker/client"
 	"io"
 	"os"
+	"runtime"
 )
 
 func startCont() {
@@ -87,16 +88,22 @@ func main() {
 
 	// выполнить в терминале команду docker context ls, выбрать DOCKER ENDPOINT, соответствующий Docker Desktop
 	// и подставить значение в dockerHost
-	dockerHost := "unix:///home/" + os.Getenv("USER") + "/.docker/desktop/docker.sock"
 
-	err := os.Setenv("DOCKER_HOST", dockerHost)
-	if err != nil {
-		panic(err)
+	if len(os.Getenv("DOCKER_HOST")) == 0 {
+		if runtime.GOOS == "windows" {
+			os.Setenv("DOCKER_HOST", "\\\\.\\pipe\\docker_engine:\\\\.\\pipe\\docker_engine")
+		} else if runtime.GOOS == "linux" {
+			os.Setenv("DOCKER_HOST", "unix:///user/"+os.Getenv("USER")+"/.docker/desktop/docker.sock")
+		} else if runtime.GOOS == "darwin" {
+			os.Setenv("DOCKER_HOST", "unix:///Users/"+os.Getenv("USER")+"/.docker/desktop/docker.sock")
+		}
 	}
 
-	startCont()
+	//fmt.Println(CTX.EndpointMetaBase{})
 
-	//getAllConts()
+	//startCont()
+
+	getAllConts()
 
 	//stopCont()
 }
