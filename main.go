@@ -86,9 +86,6 @@ func stopCont() {
 
 func main() {
 
-	// выполнить в терминале команду docker context ls, выбрать DOCKER ENDPOINT, соответствующий Docker Desktop
-	// и подставить значение в dockerHost
-
 	if len(os.Getenv("DOCKER_HOST")) == 0 {
 		if runtime.GOOS == "windows" {
 			os.Setenv("DOCKER_HOST", "\\\\.\\pipe\\docker_engine:\\\\.\\pipe\\docker_engine")
