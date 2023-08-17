@@ -93,7 +93,7 @@ func main() {
 		if runtime.GOOS == "windows" {
 			os.Setenv("DOCKER_HOST", "\\\\.\\pipe\\docker_engine:\\\\.\\pipe\\docker_engine")
 		} else if runtime.GOOS == "linux" {
-			os.Setenv("DOCKER_HOST", "unix:///user/"+os.Getenv("USER")+"/.docker/desktop/docker.sock")
+			os.Setenv("DOCKER_HOST", "unix:///home/"+os.Getenv("USER")+"/.docker/desktop/docker.sock")
 		} else if runtime.GOOS == "darwin" {
 			os.Setenv("DOCKER_HOST", "unix:///Users/"+os.Getenv("USER")+"/.docker/desktop/docker.sock")
 		}
