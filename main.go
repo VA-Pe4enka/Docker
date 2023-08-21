@@ -1,88 +1,11 @@
 package main
 
 import (
-	"context"
+	"Docker/backend"
 	"fmt"
-	"github.com/docker/docker/api/types"
-	"github.com/docker/docker/api/types/container"
-	"github.com/docker/docker/client"
-	"io"
 	"os"
 	"runtime"
 )
-
-func startCont() {
-
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		panic(err)
-	}
-	defer cli.Close()
-
-	imageName := "bfirsh/reticulate-splines"
-
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
-	if err != nil {
-		panic(err)
-	}
-	defer out.Close()
-	io.Copy(os.Stdout, out)
-
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: imageName,
-	}, nil, nil, nil, "")
-	if err != nil {
-		panic(err)
-	}
-
-	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
-	}
-
-	fmt.Println(resp.ID)
-}
-
-func getAllConts() {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		panic(err)
-	}
-	defer cli.Close()
-
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-	if err != nil {
-		panic(err)
-	}
-
-	for _, container := range containers {
-		fmt.Println(container.ID)
-	}
-}
-
-func stopCont() {
-	ctx := context.Background()
-	cli, err := client.NewEnvClient()
-	if err != nil {
-		panic(err)
-	}
-
-	// Получение списка запуцщенных контейнеров(docker ps)
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-	if err != nil {
-		panic(err)
-	}
-
-	for _, c := range containers {
-		fmt.Print("Stopping container ", c.ID[:10], "... ")
-		if err := cli.ContainerStop(ctx, c.ID, container.StopOptions{Signal: "SIGKILL", Timeout: nil}); err != nil {
-			panic(err)
-		}
-		fmt.Println("Success")
-	}
-
-}
 
 func main() {
 
@@ -96,11 +19,60 @@ func main() {
 		}
 	}
 
-	//fmt.Println(CTX.EndpointMetaBase{})
+	var option int
+	for {
+		option = 123
+		fmt.Println("Choose an option: ")
+		fmt.Println("1 - start new container.")
+		fmt.Println("2 - start exist container.")
+		fmt.Println("3 - get a list of running containers")
+		fmt.Println("4 - get a list of all containers")
+		fmt.Println("5 - stop all running containers")
+		fmt.Println("6 - get a list of all uploaded Images")
+		fmt.Println("7 - upload new Image")
+		fmt.Println("8 - get container logs")
+		fmt.Println("9 - commit container")
+		fmt.Println("0 - exit")
 
-	startCont()
+		fmt.Print("Option: ")
+		fmt.Scan(&option)
+		fmt.Println()
 
-	//getAllConts()
+		switch option {
+		case 1:
+			backend.StartNewCont()
 
-	//stopCont()
+		case 2:
+			backend.StartExistCont()
+
+		case 3:
+			backend.GetRunningConts()
+
+		case 4:
+			backend.GetAllConts()
+
+		case 5:
+			backend.StopAllConts()
+
+		case 6:
+			backend.GetAllImages()
+
+		case 7:
+			backend.PullImage()
+
+		case 8:
+			backend.GetContLogs()
+
+		case 9:
+			backend.CommitCont()
+
+		case 0:
+			return
+
+		default:
+			fmt.Println("Not an option!")
+
+		}
+	}
+
 }
