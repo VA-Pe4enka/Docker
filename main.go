@@ -19,9 +19,8 @@ func main() {
 		}
 	}
 
-	var option int
 	for {
-		option = 123
+		option := 123
 		fmt.Println("Choose an option: ")
 		fmt.Println("1 - start new container.")
 		fmt.Println("2 - start exist container.")
@@ -40,10 +39,13 @@ func main() {
 
 		switch option {
 		case 1:
-			backend.StartNewCont()
+			imageName := backend.GetImageName()
+			backend.StartNewCont(imageName)
 
 		case 2:
-			backend.StartExistCont()
+			backend.GetStoppedConts()
+			contName := backend.GetContainerName()
+			backend.StartExistCont(contName)
 
 		case 3:
 			backend.GetRunningConts()
@@ -58,13 +60,18 @@ func main() {
 			backend.GetAllImages()
 
 		case 7:
-			backend.PullImage()
+			imageName := backend.GetImageName()
+			backend.PullImage(imageName)
 
 		case 8:
-			backend.GetContLogs()
+			backend.GetAllConts()
+			contName := backend.GetContainerName()
+			backend.GetContLogs(contName)
 
 		case 9:
-			backend.CommitCont()
+			backend.GetAllConts()
+			contName := backend.GetContainerName()
+			backend.CommitCont(contName)
 
 		case 0:
 			return

@@ -13,7 +13,7 @@ import (
 
 // StartNewCont starts new container
 // also upload new Image if one is missing
-func StartNewCont() {
+func StartNewCont(imageName string) {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -21,10 +21,6 @@ func StartNewCont() {
 		panic(err)
 	}
 	defer cli.Close()
-
-	var imageName string
-	fmt.Print("Enter Image name: ")
-	fmt.Scan(&imageName)
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
@@ -48,7 +44,7 @@ func StartNewCont() {
 }
 
 // StartExistCont starts one of existing containers
-func StartExistCont() {
+func StartExistCont(contName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -65,11 +61,6 @@ func StartExistCont() {
 	for _, container := range containers {
 		conts[strings.Join(container.Names, "")] = container.ID
 	}
-	fmt.Println(conts)
-
-	var contName string
-	fmt.Print("Enter container /name: ")
-	fmt.Scan(&contName)
 
 	ID, ok := conts["/"+contName]
 	if ok {
@@ -108,7 +99,7 @@ func GetAllConts() {
 	}
 	defer cli.Close()
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
 		panic(err)
 	}
@@ -163,7 +154,7 @@ func GetAllImages() {
 }
 
 // PullImage upload new Image
-func PullImage() {
+func PullImage(imageName string) {
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -172,22 +163,17 @@ func PullImage() {
 	}
 	defer cli.Close()
 
-	var imageName string
-	fmt.Print("Enter Image name: ")
-	fmt.Scan(&imageName)
-
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
 		panic(err)
 	}
-
 	defer out.Close()
 
 	io.Copy(os.Stdout, out)
 }
 
 // GetContLogs get container logs
-func GetContLogs() {
+func GetContLogs(contName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -206,11 +192,6 @@ func GetContLogs() {
 	for _, container := range containers {
 		conts[strings.Join(container.Names, "")] = container.ID
 	}
-	fmt.Println(conts)
-
-	var contName string
-	fmt.Print("Enter container /name: ")
-	fmt.Scan(&contName)
 
 	ID, ok := conts["/"+contName]
 	if ok {
@@ -223,7 +204,7 @@ func GetContLogs() {
 }
 
 // CommitCont commits container
-func CommitCont() {
+func CommitCont(contName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -240,11 +221,6 @@ func CommitCont() {
 	for _, container := range containers {
 		conts[strings.Join(container.Names, "")] = container.ID
 	}
-	fmt.Println(conts)
-
-	var contName string
-	fmt.Print("Enter container /name: ")
-	fmt.Scan(&contName)
 
 	ID, ok := conts["/"+contName]
 	if ok {
@@ -254,4 +230,52 @@ func CommitCont() {
 		}
 		fmt.Println("Commit success: ", commitResp.ID)
 	}
+}
+
+// GetImageName returns Image name string
+func GetImageName() string {
+	var imageName string
+	fmt.Print("Enter Image name: ")
+	fmt.Scan(&imageName)
+	return imageName
+}
+
+// GetStoppedConts displays list of running and list of all containers
+func GetStoppedConts() {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		panic(err)
+	}
+	defer cli.Close()
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		panic(err)
+	}
+
+	stoppedContainers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		panic(err)
+	}
+
+	fmt.Println("Running containers: ")
+	for _, container := range containers {
+		fmt.Println(container.Names, container.ID)
+	}
+	fmt.Println()
+
+	fmt.Println("All containers: ")
+	for _, container := range stoppedContainers {
+		fmt.Println(container.Names, container.ID)
+	}
+	fmt.Println()
+}
+
+// GetContainerName returns container name string
+func GetContainerName() string {
+	var contName string
+	fmt.Print("Enter container /name: ")
+	fmt.Scan(&contName)
+	return contName
 }
