@@ -21,6 +21,8 @@ func main() {
 
 	for {
 		option := 123
+		fmt.Println()
+		fmt.Println()
 		fmt.Println("Choose an option: ")
 		fmt.Println("1 - start new container.")
 		fmt.Println("2 - start exist container.")
