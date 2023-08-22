@@ -7,6 +7,7 @@ import (
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
 	"io"
+	"log"
 	"os"
 	"strings"
 )
@@ -18,13 +19,13 @@ func StartNewCont(imageName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in pulling new Image: %s", err)
 	}
 	defer out.Close()
 	io.Copy(os.Stdout, out)
@@ -33,11 +34,11 @@ func StartNewCont(imageName string) {
 		Image: imageName,
 	}, nil, nil, nil, "")
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in creating container: %s", err)
 	}
 
 	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
-		panic(err)
+		log.Printf("Container start ERROR: %s", err)
 	}
 
 	fmt.Println(resp.ID)
@@ -48,13 +49,13 @@ func StartExistCont(contName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting container list: %s", err)
 	}
 
 	conts := make(map[string]string)
@@ -65,7 +66,7 @@ func StartExistCont(contName string) {
 	ID, ok := conts["/"+contName]
 	if ok {
 		if err := cli.ContainerStart(ctx, ID, types.ContainerStartOptions{}); err != nil {
-			panic(err)
+			log.Printf("Container start ERROR: %s", err)
 		}
 	}
 
@@ -76,13 +77,13 @@ func GetRunningConts() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting running container list: %s", err)
 	}
 
 	for _, container := range containers {
@@ -95,13 +96,13 @@ func GetAllConts() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting container list: %s", err)
 	}
 
 	for _, container := range containers {
@@ -112,23 +113,23 @@ func GetAllConts() {
 // StopAllConts stops all running containers
 func StopAllConts() {
 	ctx := context.Background()
-	cli, err := client.NewEnvClient()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 
 	// Получение списка запуцщенных контейнеров(docker ps)
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting running container list: %s", err)
 	}
 
 	for _, c := range containers {
 		fmt.Print("Stopping container ", c.ID[:10], "... ")
 		if err := cli.ContainerStop(ctx, c.ID, container.StopOptions{Signal: "SIGKILL", Timeout: nil}); err != nil {
-			panic(err)
+			log.Printf("Container was stopped with ERROR: %s", err)
 		}
-		fmt.Println("Success")
+		fmt.Println("All containers stopped successfully")
 	}
 
 }
@@ -139,13 +140,13 @@ func GetAllImages() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	images, err := cli.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting Images list: %s", err)
 	}
 
 	for _, image := range images {
@@ -159,13 +160,13 @@ func PullImage(imageName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in pulling new Image: %s", err)
 	}
 	defer out.Close()
 
@@ -177,13 +178,13 @@ func GetContLogs(contName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting containers list: %s", err)
 	}
 
 	options := types.ContainerLogsOptions{ShowStdout: true}
@@ -197,7 +198,7 @@ func GetContLogs(contName string) {
 	if ok {
 		out, err := cli.ContainerLogs(ctx, ID, options)
 		if err != nil {
-			panic(err)
+			log.Printf("ERROR getting container logs: %s", err)
 		}
 		io.Copy(os.Stdout, out)
 	}
@@ -208,13 +209,13 @@ func CommitCont(contName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting containers list: %s", err)
 	}
 
 	conts := make(map[string]string)
@@ -226,7 +227,7 @@ func CommitCont(contName string) {
 	if ok {
 		commitResp, err := cli.ContainerCommit(ctx, ID, types.ContainerCommitOptions{})
 		if err != nil {
-			panic(err)
+			log.Printf("ERROR commiting container: %s", err)
 		}
 		fmt.Println("Commit success: ", commitResp.ID)
 	}
@@ -245,18 +246,18 @@ func GetStoppedConts() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR in opening client: %s", err)
 	}
 	defer cli.Close()
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting  containers list: %s", err)
 	}
 
 	stoppedContainers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
-		panic(err)
+		log.Printf("ERROR getting running containers list: %s", err)
 	}
 
 	fmt.Println("Running containers: ")
