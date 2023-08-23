@@ -14,7 +14,9 @@ import (
 
 // StartNewCont starts new container
 // also upload new Image if one is missing
-func StartNewCont(imageName string) {
+func StartNewCont(config container.Config) {
+
+	config = container.Config{}
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -23,16 +25,14 @@ func StartNewCont(imageName string) {
 	}
 	defer cli.Close()
 
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	out, err := cli.ImagePull(ctx, config.Image, types.ImagePullOptions{})
 	if err != nil {
 		log.Printf("ERROR in pulling new Image: %s", err)
 	}
 	defer out.Close()
 	io.Copy(os.Stdout, out)
 
-	resp, err := cli.ContainerCreate(ctx, &container.Config{
-		Image: imageName,
-	}, nil, nil, nil, "")
+	resp, err := cli.ContainerCreate(ctx, &config, nil, nil, nil, "")
 	if err != nil {
 		log.Printf("ERROR in creating container: %s", err)
 	}
@@ -279,4 +279,10 @@ func GetContainerName() string {
 	fmt.Print("Enter container /name: ")
 	fmt.Scan(&contName)
 	return contName
+}
+
+func SetContConfig() container.Config {
+	config := container.Config{}
+
+	return config
 }

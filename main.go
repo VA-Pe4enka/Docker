@@ -41,8 +41,8 @@ func main() {
 
 		switch option {
 		case 1:
-			imageName := backend.GetImageName()
-			backend.StartNewCont(imageName)
+			config := backend.SetContConfig()
+			backend.StartNewCont(config)
 
 		case 2:
 			backend.GetStoppedConts()
