@@ -233,14 +233,6 @@ func CommitCont(contName string) {
 	}
 }
 
-// GetImageName returns Image name string
-func GetImageName() string {
-	var imageName string
-	fmt.Print("Enter Image name: ")
-	fmt.Scan(&imageName)
-	return imageName
-}
-
 // GetStoppedConts displays list of running and list of all containers
 func GetStoppedConts() {
 	ctx := context.Background()
@@ -271,18 +263,4 @@ func GetStoppedConts() {
 		fmt.Println(container.Names, container.ID)
 	}
 	fmt.Println()
-}
-
-// GetContainerName returns container name string
-func GetContainerName() string {
-	var contName string
-	fmt.Print("Enter container /name: ")
-	fmt.Scan(&contName)
-	return contName
-}
-
-func SetContConfig() container.Config {
-	config := container.Config{}
-
-	return config
 }

@@ -2,6 +2,7 @@ package main
 
 import (
 	"Docker/backend"
+	"Docker/config"
 	"fmt"
 	"os"
 	"runtime"
@@ -41,12 +42,12 @@ func main() {
 
 		switch option {
 		case 1:
-			config := backend.SetContConfig()
+			config := config.SetContConfig()
 			backend.StartNewCont(config)
 
 		case 2:
 			backend.GetStoppedConts()
-			contName := backend.GetContainerName()
+			contName := config.GetContainerName()
 			backend.StartExistCont(contName)
 
 		case 3:
@@ -62,17 +63,17 @@ func main() {
 			backend.GetAllImages()
 
 		case 7:
-			imageName := backend.GetImageName()
+			imageName := config.GetImageName()
 			backend.PullImage(imageName)
 
 		case 8:
 			backend.GetAllConts()
-			contName := backend.GetContainerName()
+			contName := config.GetContainerName()
 			backend.GetContLogs(contName)
 
 		case 9:
 			backend.GetAllConts()
-			contName := backend.GetContainerName()
+			contName := config.GetContainerName()
 			backend.CommitCont(contName)
 
 		case 0:
