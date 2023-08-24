@@ -16,8 +16,6 @@ import (
 // also upload new Image if one is missing
 func StartNewCont(config container.Config) {
 
-	config = container.Config{}
-
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {

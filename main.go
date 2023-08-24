@@ -42,8 +42,8 @@ func main() {
 
 		switch option {
 		case 1:
-			config := config.SetContConfig()
-			backend.StartNewCont(config)
+			cfg := config.GetContConfig()
+			backend.StartNewCont(cfg)
 
 		case 2:
 			backend.GetStoppedConts()
