@@ -24,6 +24,7 @@ func GetContainerName() string {
 	return contName
 }
 
+// GetContConfig getting configuration from config file
 func GetContConfig() container.Config {
 	config := container.Config{}
 
