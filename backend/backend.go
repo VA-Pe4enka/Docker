@@ -284,7 +284,7 @@ func GetStoppedConts() {
 	fmt.Println()
 }
 
-// StopContViaImage deletes container with the specified images
+// StopContViaImage stopping container with the specified images
 func StopContViaImage(imageName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -314,6 +314,7 @@ func StopContViaImage(imageName string) {
 
 }
 
+// DeleteContViaImage removing container with the specified images
 func DeleteContViaImage(imageName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
