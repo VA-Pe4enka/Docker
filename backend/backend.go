@@ -84,9 +84,16 @@ func GetRunningConts() {
 		log.Printf("ERROR getting running container list: %s", err)
 	}
 
+	fmt.Println("List of running containers: ")
+
 	for _, container := range containers {
-		fmt.Println(container.Names, container.ID)
+		if strings.Contains(container.Image, "sha256") {
+			container.Image = "<none>"
+		}
+		fmt.Println(container.Names, container.Image)
 	}
+
+	fmt.Println()
 }
 
 // GetAllConts get a list of all containers
@@ -103,9 +110,16 @@ func GetAllConts() {
 		log.Printf("ERROR getting container list: %s", err)
 	}
 
+	fmt.Println("List of all containers: ")
+
 	for _, container := range containers {
-		fmt.Println(container.Names, container.ID)
+		if strings.Contains(container.Image, "sha256") {
+			container.Image = "<none>"
+		}
+		fmt.Println(container.Names, container.Image)
 	}
+
+	fmt.Println()
 }
 
 // StopAllConts stops all running containers
@@ -147,9 +161,16 @@ func GetAllImages() {
 		log.Printf("ERROR getting Images list: %s", err)
 	}
 
+	fmt.Println("List of all Images: ")
+
 	for _, image := range images {
-		fmt.Println(image.ID)
+		if len(image.RepoTags) == 0 {
+			image.RepoTags = append(image.RepoTags, "<none>")
+		}
+		fmt.Println(image.RepoTags, image.ID)
 	}
+
+	fmt.Println()
 }
 
 // PullImage upload new Image
@@ -261,4 +282,63 @@ func GetStoppedConts() {
 		fmt.Println(container.Names, container.ID)
 	}
 	fmt.Println()
+}
+
+// StopContViaImage deletes container with the specified images
+func StopContViaImage(imageName string) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("ERROR in opening client: %s", err)
+	}
+	defer cli.Close()
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		log.Printf("ERROR getting running container list: %s", err)
+	}
+
+	for _, c := range containers {
+		if strings.Contains(c.Image, "sha256") {
+			c.Image = "<none>"
+		}
+		if strings.Contains(c.Image, imageName) {
+			fmt.Print("Stopping container ", c.ID[:10], "... ")
+			if err := cli.ContainerStop(ctx, c.ID, container.StopOptions{Signal: "SIGKILL", Timeout: nil}); err != nil {
+				log.Printf("Container was stopped with ERROR: %s", err)
+			}
+			fmt.Printf("%s containers stopped successfully", imageName)
+			fmt.Println()
+		}
+	}
+
+}
+
+func DeleteContViaImage(imageName string) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("ERROR in opening client: %s", err)
+	}
+	defer cli.Close()
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		log.Printf("ERROR getting running container list: %s", err)
+	}
+
+	for _, c := range containers {
+		if strings.Contains(c.Image, "sha256") {
+			c.Image = "<none>"
+		}
+		if strings.Contains(c.Image, imageName) {
+			fmt.Print("Removing container ", c.ID[:10], "... ")
+			if err := cli.ContainerRemove(ctx, c.ID, types.ContainerRemoveOptions{}); err != nil {
+				log.Printf("Container was removed with ERROR: %s", err)
+			}
+			fmt.Printf("%s containers removed successfully", imageName)
+			fmt.Println()
+
+		}
+	}
 }

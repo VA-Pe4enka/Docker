@@ -21,7 +21,7 @@ func main() {
 	}
 
 	for {
-		option := 123
+		option := "123"
 		fmt.Println()
 		fmt.Println()
 		fmt.Println("Choose an option: ")
@@ -34,49 +34,76 @@ func main() {
 		fmt.Println("7 - upload new Image")
 		fmt.Println("8 - get container logs")
 		fmt.Println("9 - commit container")
-		fmt.Println("0 - exit")
+		fmt.Println("10 - delete container with the specified images")
+		fmt.Println(".. - exit")
 
 		fmt.Print("Option: ")
 		fmt.Scan(&option)
 		fmt.Println()
 
 		switch option {
-		case 1:
+		case "1":
 			cfg := config.GetContConfig()
 			backend.StartNewCont(cfg)
 
-		case 2:
+		case "2":
 			backend.GetStoppedConts()
 			contName := config.GetContainerName()
 			backend.StartExistCont(contName)
 
-		case 3:
+		case "3":
 			backend.GetRunningConts()
 
-		case 4:
+		case "4":
 			backend.GetAllConts()
 
-		case 5:
+		case "5":
 			backend.StopAllConts()
 
-		case 6:
+		case "6":
 			backend.GetAllImages()
 
-		case 7:
+		case "7":
 			imageName := config.GetImageName()
 			backend.PullImage(imageName)
 
-		case 8:
+		case "8":
 			backend.GetAllConts()
 			contName := config.GetContainerName()
 			backend.GetContLogs(contName)
 
-		case 9:
+		case "9":
 			backend.GetAllConts()
 			contName := config.GetContainerName()
 			backend.CommitCont(contName)
 
-		case 0:
+		case "10":
+			opt := 123
+			fmt.Println("Enter 1 to stop container via Image name or 2 to remove container")
+			fmt.Print("Option: ")
+			fmt.Scan(&opt)
+			fmt.Println()
+			switch opt {
+			case 1:
+				backend.GetAllImages()
+				backend.GetRunningConts()
+				imageName := config.GetImageName()
+				backend.StopContViaImage(imageName)
+
+			case 2:
+				backend.GetAllImages()
+				backend.GetAllConts()
+				imageName := config.GetImageName()
+				backend.DeleteContViaImage(imageName)
+
+			case 0:
+				return
+
+			default:
+				fmt.Println("Not an option!")
+			}
+
+		case "..":
 			return
 
 		default:
