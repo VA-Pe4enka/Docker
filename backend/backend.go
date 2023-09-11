@@ -70,56 +70,32 @@ func StartExistCont(contName string) {
 
 }
 
-// GetRunningConts get a list of running containers
-func GetRunningConts() {
+// StopOneCont stops one specified container
+func StopOneCont(contName string) {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Printf("ERROR in opening client: %s", err)
 	}
-	defer cli.Close()
-
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
-	if err != nil {
-		log.Printf("ERROR getting running container list: %s", err)
-	}
-
-	fmt.Println("List of running containers: ")
-
-	for _, container := range containers {
-		if strings.Contains(container.Image, "sha256") {
-			container.Image = "<none>"
-		}
-		fmt.Println(container.Names, container.Image)
-	}
-
-	fmt.Println()
-}
-
-// GetAllConts get a list of all containers
-func GetAllConts() {
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Printf("ERROR in opening client: %s", err)
-	}
-	defer cli.Close()
 
 	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
 		log.Printf("ERROR getting container list: %s", err)
 	}
 
-	fmt.Println("List of all containers: ")
-
+	conts := make(map[string]string)
 	for _, container := range containers {
-		if strings.Contains(container.Image, "sha256") {
-			container.Image = "<none>"
-		}
-		fmt.Println(container.Names, container.Image)
+		conts[strings.Join(container.Names, "")] = container.ID
 	}
 
-	fmt.Println()
+	ID, ok := conts["/"+contName]
+	if ok {
+		fmt.Print("Stopping container ", ID[:10], "... ")
+		if err := cli.ContainerStop(ctx, ID, container.StopOptions{Signal: "SIGKILL", Timeout: nil}); err != nil {
+			log.Printf("Container was stopped with ERROR: %s", err)
+		}
+		fmt.Println("Container stopped successfully")
+	}
 }
 
 // StopAllConts stops all running containers
@@ -146,9 +122,8 @@ func StopAllConts() {
 
 }
 
-// GetAllImages get a list of all uploaded Images
-func GetAllImages() {
-
+// GetAllConts get a list of all containers
+func GetAllContainers() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -156,26 +131,25 @@ func GetAllImages() {
 	}
 	defer cli.Close()
 
-	images, err := cli.ImageList(ctx, types.ImageListOptions{})
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
-		log.Printf("ERROR getting Images list: %s", err)
+		log.Printf("ERROR getting container list: %s", err)
 	}
 
-	fmt.Println("List of all Images: ")
+	fmt.Println("List of all containers: ")
 
-	for _, image := range images {
-		if len(image.RepoTags) == 0 {
-			image.RepoTags = append(image.RepoTags, "<none>")
+	for _, container := range containers {
+		if strings.Contains(container.Image, "sha256") {
+			container.Image = "<none>"
 		}
-		fmt.Println(image.RepoTags, image.ID)
+		fmt.Println(container.Names, container.Image)
 	}
 
 	fmt.Println()
 }
 
-// PullImage upload new Image
-func PullImage(imageName string) {
-
+// GetRunningConts get a list of running containers
+func GetRunningConts() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -183,13 +157,53 @@ func PullImage(imageName string) {
 	}
 	defer cli.Close()
 
-	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
 	if err != nil {
-		log.Printf("ERROR in pulling new Image: %s", err)
+		log.Printf("ERROR getting running container list: %s", err)
 	}
-	defer out.Close()
 
-	io.Copy(os.Stdout, out)
+	fmt.Println("List of running containers: ")
+
+	for _, container := range containers {
+		if strings.Contains(container.Image, "sha256") {
+			container.Image = "<none>"
+		}
+		fmt.Println(container.Names, container.Image)
+	}
+
+	fmt.Println()
+}
+
+// GetStoppedConts displays list of running and list of all containers
+func GetStoppedConts() {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("ERROR in opening client: %s", err)
+	}
+	defer cli.Close()
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		log.Printf("ERROR getting  containers list: %s", err)
+	}
+
+	stoppedContainers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
+	if err != nil {
+		log.Printf("ERROR getting running containers list: %s", err)
+	}
+
+	fmt.Println("Running containers: ")
+	for _, container := range containers {
+		fmt.Println(container.Names, container.ID)
+	}
+	fmt.Println()
+
+	fmt.Println("All containers: ")
+	for _, container := range stoppedContainers {
+		fmt.Println(container.Names, container.ID)
+	}
+	fmt.Println()
 }
 
 // GetContLogs get container logs
@@ -252,8 +266,9 @@ func CommitCont(contName string) {
 	}
 }
 
-// GetStoppedConts displays list of running and list of all containers
-func GetStoppedConts() {
+// GetAllImages get a list of all uploaded Images
+func GetAllImages() {
+
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -261,28 +276,43 @@ func GetStoppedConts() {
 	}
 	defer cli.Close()
 
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	images, err := cli.ImageList(ctx, types.ImageListOptions{})
 	if err != nil {
-		log.Printf("ERROR getting  containers list: %s", err)
+		log.Printf("ERROR getting Images list: %s", err)
 	}
 
-	stoppedContainers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
-	if err != nil {
-		log.Printf("ERROR getting running containers list: %s", err)
+	fmt.Println("List of all Images: ")
+
+	for _, image := range images {
+		if len(image.RepoTags) == 0 {
+			image.RepoTags = append(image.RepoTags, "<none>")
+		}
+		fmt.Println(image.RepoTags, image.ID)
 	}
 
-	fmt.Println("Running containers: ")
-	for _, container := range containers {
-		fmt.Println(container.Names, container.ID)
-	}
-	fmt.Println()
-
-	fmt.Println("All containers: ")
-	for _, container := range stoppedContainers {
-		fmt.Println(container.Names, container.ID)
-	}
 	fmt.Println()
 }
+
+// PullImage upload new Image
+func PullImage(imageName string) {
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("ERROR in opening client: %s", err)
+	}
+	defer cli.Close()
+
+	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	if err != nil {
+		log.Printf("ERROR in pulling new Image: %s", err)
+	}
+	defer out.Close()
+
+	io.Copy(os.Stdout, out)
+}
+
+//TODO: Add deleting image
 
 // StopContViaImage stopping container with the specified images
 func StopContViaImage(imageName string) {

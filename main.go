@@ -1,9 +1,7 @@
 package main
 
 import (
-	"Docker/backend"
-	"Docker/config"
-	"fmt"
+	"Docker/cmd"
 	"os"
 	"runtime"
 )
@@ -20,96 +18,5 @@ func main() {
 		}
 	}
 
-	for {
-		option := "123"
-		fmt.Println()
-		fmt.Println()
-		fmt.Println("Choose an option: ")
-		fmt.Println("1 - start new container.")
-		fmt.Println("2 - start exist container.")
-		fmt.Println("3 - get a list of running containers")
-		fmt.Println("4 - get a list of all containers")
-		fmt.Println("5 - stop all running containers")
-		fmt.Println("6 - get a list of all uploaded Images")
-		fmt.Println("7 - upload new Image")
-		fmt.Println("8 - get container logs")
-		fmt.Println("9 - commit container")
-		fmt.Println("10 - delete container with the specified images")
-		fmt.Println(".. - exit")
-
-		fmt.Print("Option: ")
-		fmt.Scan(&option)
-		fmt.Println()
-
-		switch option {
-		case "1":
-			cfg := config.GetContConfig()
-			backend.StartNewCont(cfg)
-
-		case "2":
-			backend.GetStoppedConts()
-			contName := config.GetContainerName()
-			backend.StartExistCont(contName)
-
-		case "3":
-			backend.GetRunningConts()
-
-		case "4":
-			backend.GetAllConts()
-
-		case "5":
-			backend.StopAllConts()
-
-		case "6":
-			backend.GetAllImages()
-
-		case "7":
-			imageName := config.GetImageName()
-			backend.PullImage(imageName)
-
-		case "8":
-			backend.GetAllConts()
-			contName := config.GetContainerName()
-			backend.GetContLogs(contName)
-
-		case "9":
-			backend.GetAllConts()
-			contName := config.GetContainerName()
-			backend.CommitCont(contName)
-
-		case "10":
-			opt := 123
-			fmt.Println("Enter 1 to stop container via Image name or 2 to remove container")
-			fmt.Print("Option: ")
-			fmt.Scan(&opt)
-			fmt.Println()
-			switch opt {
-			case 1:
-				backend.GetAllImages()
-				backend.GetRunningConts()
-				imageName := config.GetImageName()
-				backend.StopContViaImage(imageName)
-
-			case 2:
-				backend.GetAllImages()
-				backend.GetAllConts()
-				imageName := config.GetImageName()
-				backend.DeleteContViaImage(imageName)
-
-			case 0:
-				return
-
-			default:
-				fmt.Println("Not an option!")
-			}
-
-		case "..":
-			return
-
-		default:
-			fmt.Println("Not an option!")
-
-		}
-	}
-
+	cmd.Execute()
 }

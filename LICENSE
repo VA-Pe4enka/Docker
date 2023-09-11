@@ -1,0 +1,21 @@
+Usage:
+        container [COMMAND] [FLAG]:
+        Commands:
+                        start   - starting container
+                        Flags:
+                                -new    || starts new container
+                                -exist  || starts exist container
+                        stop    - stopping container
+                        Flags:
+                                -all    || stops all running containers
+                                -s      || stops one running container
+                        ls              - printing list of containers
+                        Flags:
+                                -all    || list all containers
+                                -r      || list running containers
+                        log     - printing container logs
+                        commit  - committing container
+        image [COMMAND] [FLAG]:
+        Commands:
+                        ls      - printing list of images
+                        pull    - pulling new image
