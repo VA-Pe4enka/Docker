@@ -18,4 +18,6 @@ Usage:
         image [COMMAND] [FLAG]:
         Commands:
                         --ls      - printing list of images
-                       --pull    - pulling new image
+                       --pull     - pulling new image
+                       --rm       - deleting image
+                       --update   - update image

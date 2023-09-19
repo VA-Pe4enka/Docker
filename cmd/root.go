@@ -64,9 +64,23 @@ var image = &cobra.Command{
 		}
 
 		flag, _ = cmd.Flags().GetString("pull")
-		if flag == "." {
+		if flag == "-n" {
 			imageName := config.GetImageName()
 			backend.PullImage(imageName)
+		}
+
+		flag, _ = cmd.Flags().GetString("rm")
+		if flag == "-s" {
+			backend.GetAllImages()
+			imageName := config.GetImageName()
+			backend.DeleteImage(imageName)
+		}
+
+		flag, _ = cmd.Flags().GetString("update")
+		if flag == "-u" {
+			backend.GetAllImages()
+			imageName := config.GetImageName()
+			backend.UpdateImage(imageName)
 		}
 	},
 }
@@ -102,5 +116,7 @@ func init() {
 
 	rootCmd.AddCommand(image)
 	image.PersistentFlags().String("ls", "", "Use this flag to get images list")
-	image.PersistentFlags().String("pull", ".", "Use this flag to pull new image")
+	image.PersistentFlags().String("pull", "-n", "Use this flag to pull new image")
+	image.PersistentFlags().String("rm", "-s", "Use this flag to delete image")
+	image.PersistentFlags().String("update", "-u", "Use this flag to update image")
 }

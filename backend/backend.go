@@ -122,7 +122,7 @@ func StopAllConts() {
 
 }
 
-// GetAllConts get a list of all containers
+// GetAllContainers get a list of all containers
 func GetAllContainers() {
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -312,7 +312,33 @@ func PullImage(imageName string) {
 	io.Copy(os.Stdout, out)
 }
 
-//TODO: Add deleting image
+// DeleteImage deletes one specified image
+func DeleteImage(imageName string) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("ERROR in opening client: %s", err)
+	}
+	defer cli.Close()
+
+	images, err := cli.ImageList(ctx, types.ImageListOptions{})
+	if err != nil {
+		log.Printf("ERROR getting Images list: %s", err)
+	}
+
+	ims := make(map[string]string)
+	for _, image := range images {
+		if len(image.RepoTags) == 0 {
+			image.RepoTags = append(image.RepoTags, "<none>")
+		}
+		ims[strings.Join(image.RepoTags, "")] = image.ID
+	}
+
+	_, err = cli.ImageRemove(ctx, ims[imageName], types.ImageRemoveOptions{})
+	if err != nil {
+		log.Printf("ERROR deleting Image: %s", err)
+	}
+}
 
 // StopContViaImage stopping container with the specified images
 func StopContViaImage(imageName string) {
@@ -372,4 +398,83 @@ func DeleteContViaImage(imageName string) {
 
 		}
 	}
+}
+
+func UpdateImage(imageName string) {
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Printf("ERROR in opening client: %s", err)
+	}
+	defer cli.Close()
+
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		log.Printf("ERROR getting running container list: %s", err)
+	}
+
+	// stopping and removing containers
+	for _, c := range containers {
+		if strings.Contains(c.Image, "sha256") {
+			c.Image = "<none>"
+		}
+		if strings.Contains(c.Image, imageName) {
+			fmt.Print("Stopping container ", c.ID[:10], "... ")
+			if err := cli.ContainerStop(ctx, c.ID, container.StopOptions{Signal: "SIGKILL", Timeout: nil}); err != nil {
+				log.Printf("Container was stopped with ERROR: %s", err)
+			}
+			fmt.Printf("%s container stopped successfully", imageName)
+			fmt.Println()
+
+			if err := cli.ContainerRemove(ctx, c.ID, types.ContainerRemoveOptions{}); err != nil {
+				log.Printf("Container was removed with ERROR: %s", err)
+			}
+			fmt.Printf("%s containers removed successfully", imageName)
+			fmt.Println()
+		}
+	}
+
+	// removing Image
+	images, err := cli.ImageList(ctx, types.ImageListOptions{})
+	if err != nil {
+		log.Printf("ERROR getting Images list: %s", err)
+	}
+
+	ims := make(map[string]string)
+	for _, image := range images {
+		if len(image.RepoTags) == 0 {
+			image.RepoTags = append(image.RepoTags, "<none>")
+		}
+		ims[strings.Join(image.RepoTags, "")] = image.ID
+	}
+
+	_, err = cli.ImageRemove(ctx, ims[imageName], types.ImageRemoveOptions{})
+	if err != nil {
+		log.Printf("ERROR deleting Image: %s", err)
+	}
+
+	//pulling latest image
+	out, err := cli.ImagePull(ctx, imageName, types.ImagePullOptions{})
+	if err != nil {
+		log.Printf("ERROR in pulling new Image: %s", err)
+	}
+	defer out.Close()
+
+	io.Copy(os.Stdout, out)
+
+	//create new container
+	resp, err := cli.ContainerCreate(ctx, &container.Config{
+		Image: imageName,
+	}, nil, nil, nil, "")
+	if err != nil {
+		log.Printf("ERROR in creating container: %s", err)
+	}
+
+	//start new container
+	if err := cli.ContainerStart(ctx, resp.ID, types.ContainerStartOptions{}); err != nil {
+		log.Printf("Container start ERROR: %s", err)
+	}
+
+	fmt.Println(resp.ID)
+
 }
